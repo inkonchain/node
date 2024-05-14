@@ -1,2 +1,1 @@
-# node
-How to run an Ink Node
+# Running an Ink Node
