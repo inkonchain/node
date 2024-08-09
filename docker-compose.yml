@@ -1,0 +1,32 @@
+services:
+  op-geth: # this is Optimism's geth client
+    build:
+      context: .
+      dockerfile: op-geth/Dockerfile
+    ports:
+      - 8545:8545 # RPC
+      - 8546:8546 # websocket
+      - 30303:30303 # P2P TCP (currently unused)
+      - 30303:30303/udp # P2P UDP (currently unused)
+      - 7301:6060 # metrics
+    volumes:
+      - ./geth-data:/data
+      - ./var:/var
+    env_file:
+      - .env.ink-sepolia
+  op-node:
+    build:
+      context: .
+      dockerfile: op-node/Dockerfile
+    depends_on:
+      - op-geth
+    ports:
+      - 9545:9545 # RPC
+      - 9222:9222 # P2P TCP
+      - 9222:9222/udp # P2P UDP
+      - 7300:7300 # metrics
+      - 6060:6060 # pprof
+    volumes:
+      - ./var:/var
+    env_file:
+      - .env.ink-sepolia
