@@ -4,12 +4,11 @@
 
 ### Installation 📥
 
-1. Download the latest snapshot from this Google Drive directory: [ink-geth-snapshots](https://drive.google.com/drive/folders/1uDm7C67Q98kRJQ6mRmeSElgdHUA6gylb?usp=sharing).
-2. Move the downloaded `geth.tar.lz4` to root of the repository.
-3. Run the setup script.
-   ```
-   ./setup.sh
-   ```
+Run the setup script:
+
+```
+./setup.sh
+```
 
 ### Configuration ⚙️
 
