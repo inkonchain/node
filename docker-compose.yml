@@ -10,7 +10,7 @@ services:
       - 30303:30303/udp # P2P UDP (currently unused)
       - 7301:6060 # metrics
     volumes:
-      - ./geth-data:/data
+      - ./geth:/data
       - ./var:/var
     env_file:
       - .env.ink-sepolia

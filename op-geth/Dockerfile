@@ -13,7 +13,7 @@ RUN git clone $REPO --branch $VERSION --single-branch . && \
 
 RUN go run build/ci.go install -static ./cmd/geth
 
-FROM golang:1.21 as run-op-geth
+FROM golang:1.21 AS run-op-geth
 
 RUN apt-get update && \
     apt-get install netcat-openbsd && \
