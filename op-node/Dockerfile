@@ -3,9 +3,9 @@ FROM golang:1.21 AS build-op-node
 WORKDIR /app
 
 ENV REPO=https://github.com/ethereum-optimism/optimism.git
-ENV VERSION=v1.9.0
+ENV VERSION=v1.9.3
 # for verification:
-ENV COMMIT=ec45f6634ab2855a4ae5d30c4e240d79f081d689
+ENV COMMIT=e81c50de0a51954c64444b849be4768c8116cffb
 
 RUN git clone $REPO --branch op-node/$VERSION --single-branch . && \
     git switch -c branch-$VERSION && \
