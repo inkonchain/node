@@ -16,11 +16,11 @@ read -p "Do you want to fetch the latest snapshot? [y/N]: " fetch_snapshot
 echo ""
 
 if [[ "$fetch_snapshot" == "y" || "$fetch_snapshot" == "Y" ]]; then
-  SNAPSHOT_FILE_PATH=$(curl -s https://storage.googleapis.com/raas-op-geth-snapshots-cc474/datadir-archive/latest)
+  SNAPSHOT_FILE_PATH=$(curl -s https://storage.googleapis.com/raas-op-geth-snapshots-d2a56/datadir-archive/latest)
   SNAPSHOT_FILE_NAME=${SNAPSHOT_FILE_PATH##*/}
 
   echo -e "${GRAY}Fetching the latest snapshot... ${ITALIC}(will take a few minutes...) ${NC}"
-  wget https://storage.googleapis.com/raas-op-geth-snapshots-cc474/datadir-archive/$SNAPSHOT_FILE_PATH
+  wget https://storage.googleapis.com/raas-op-geth-snapshots-d2a56/datadir-archive/$SNAPSHOT_FILE_PATH
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}↳ Snapshot successfully fetched as $SNAPSHOT_FILE_NAME.${NC}\n"
   else
@@ -29,7 +29,7 @@ if [[ "$fetch_snapshot" == "y" || "$fetch_snapshot" == "Y" ]]; then
   fi
 
   echo -e "${GRAY}Fetching the snapshot checksum...${NC}"
-  wget https://storage.googleapis.com/raas-op-geth-snapshots-cc474/datadir-archive/$SNAPSHOT_FILE_PATH.sha256
+  wget https://storage.googleapis.com/raas-op-geth-snapshots-d2a56/datadir-archive/$SNAPSHOT_FILE_PATH.sha256
   if [ $? -eq 0 ]; then
     echo -e "${GREEN}↳ Checksum successfully fetched as $SNAPSHOT_FILE_NAME.sha256${NC}\n"
   else
