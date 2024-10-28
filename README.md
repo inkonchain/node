@@ -59,7 +59,7 @@ Use this script to compare your local finalized block with the one retrieved fro
 local_block=$(curl -s -X POST http://localhost:8545 -H "Content-Type: application/json" \
   --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["finalized", false],"id":1}' \
   | jq -r .result.number | sed 's/^0x//' | awk '{printf "%d\n", "0x" $0}'); \
-remote_block=$(curl -s -X POST https://sepolia-rpc.inkchain.xyz/ -H "Content-Type: application/json" \
+remote_block=$(curl -s -X POST https://rpc-gel-sepolia.inkonchain.com/ -H "Content-Type: application/json" \
  --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["finalized", false],"id":1}' \
  | jq -r .result.number | sed 's/^0x//' | awk '{printf "%d\n", "0x" $0}'); \
 echo -e "Local finalized block: $local_block\nRemote finalized block: $remote_block"
