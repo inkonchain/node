@@ -43,7 +43,7 @@ curl -X POST -H "Content-Type: application/json" --data \
 
 ### op-geth API 🌐
 
-When your local node is fully synced, calling the eth_blockNumber method on the op-geth API should return the latest block number as seen on the [block explorer](https://sepolia-explorer.inkchain.xyz/).
+When your local node is fully synced, calling the eth_blockNumber method on the op-geth API should return the latest block number as seen on the [block explorer](https://explorer-sepolia.inkonchain.com/).
 
 ```sh
 curl http://localhost:8545 -X POST \

@@ -1,35 +1,35 @@
 {
-    "genesis": {
-      "l1": {
-        "hash": "0x5fb818b4d3ba100eeb3347c508bca24752ee88f235120e108bd9ee5d1b2ae50b",
-        "number": 6880819
-      },
-      "l2": {
-        "hash": "0xe5fd5cf0be56af58ad5751b401410d6b7a09d830fa459789746a3d0dd1c79834",
-        "number": 0
-      },
-      "l2_time": 1729003296,
-      "system_config": {
-        "scalar": "0x010000000000000000000000000000000000000000000000000c5fc500000558",
-        "gasLimit": 30000000,
-        "overhead": "0x0000000000000000000000000000000000000000000000000000000000000000",
-        "batcherAddr": "0x21e57c21530bc33f12ba96c9ddc135488365002f"
-      }
+  "genesis": {
+    "l1": {
+      "hash": "0x5fb818b4d3ba100eeb3347c508bca24752ee88f235120e108bd9ee5d1b2ae50b",
+      "number": 6880819
     },
-    "block_time": 1,
-    "delta_time": 0,
-    "fjord_time": 0,
-    "canyon_time": 0,
-    "l1_chain_id": 11155111,
-    "l2_chain_id": 763373,
-    "ecotone_time": 0,
-    "granite_time": 0,
-    "regolith_time": 0,
-    "channel_timeout": 300,
-    "seq_window_size": 3600,
-    "batch_inbox_address": "0x004de1914f4f17ac234f5a5bc8a4072a231d44bf",
-    "max_sequencer_drift": 600,
-    "deposit_contract_address": "0x5c1d29c6c9c8b0800692acc95d700bcb4966a1d7",
-    "l1_system_config_address": "0x05c993e60179f28bf649a2bb5b00b5f4283bd525",
-    "protocol_versions_address": "0x79add5713b383daa0a138d3c4780c7a1804a8090"
-  }
+    "l2": {
+      "hash": "0xe5fd5cf0be56af58ad5751b401410d6b7a09d830fa459789746a3d0dd1c79834",
+      "number": 0
+    },
+    "l2_time": 1729003296,
+    "system_config": {
+      "scalar": "0x010000000000000000000000000000000000000000000000000c5fc500000558",
+      "gasLimit": 30000000,
+      "overhead": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "batcherAddr": "0x21e57c21530bc33f12ba96c9ddc135488365002f"
+    }
+  },
+  "block_time": 1,
+  "delta_time": 0,
+  "fjord_time": 0,
+  "canyon_time": 0,
+  "l1_chain_id": 11155111,
+  "l2_chain_id": 763373,
+  "ecotone_time": 0,
+  "granite_time": 0,
+  "regolith_time": 0,
+  "channel_timeout": 300,
+  "seq_window_size": 3600,
+  "batch_inbox_address": "0x004de1914f4f17ac234f5a5bc8a4072a231d44bf",
+  "max_sequencer_drift": 600,
+  "deposit_contract_address": "0x5c1d29c6c9c8b0800692acc95d700bcb4966a1d7",
+  "l1_system_config_address": "0x05c993e60179f28bf649a2bb5b00b5f4283bd525",
+  "protocol_versions_address": "0x79add5713b383daa0a138d3c4780c7a1804a8090"
+}
