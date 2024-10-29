@@ -2,23 +2,23 @@
 
 ## Setup Instructions 🛠️
 
+### Configuration ⚙️
+
+To run the Ink node, it's required to bring your own L1 Sepolia Node. We suggest using [QuickNode](https://www.quicknode.com/) for this purpose.
+
+Create a `.env` file in the root of the repository with the following environment variables, replacing `...` with your node's details:
+
+```sh
+L1_RPC_URL=...
+L1_BEACON_URL=...
+```
+
 ### Installation 📥
 
 Run the setup script:
 
 ```
 ./setup.sh
-```
-
-### Configuration ⚙️
-
-By default, the local Ink node leverages public RPC & Beacon APIs from publicnode.com.
-
-If you prefer, you can use your own RPC & Beacon APIs by creating a `.env` file in the root of the repository with the following environment variables:
-
-```sh
-L1_RPC_URL=...
-L1_BEACON_URL=...
 ```
 
 ### Execution 🚀
