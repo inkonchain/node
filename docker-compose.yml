@@ -17,6 +17,7 @@ services:
     user: "1000:1000"
     environment:
       - GETH_DATA_DIR=/data
+    restart: on-failure   # Automatically restart on failure for better resilience
   op-node:
     build:
       context: .
@@ -34,3 +35,4 @@ services:
     env_file:
       - .env.ink-sepolia
     user: "1000:1000"
+    restart: on-failure   # Automatically restart on failure for better resilience
