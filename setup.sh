@@ -211,7 +211,20 @@ else
     chmod -R 777 geth
   fi
 fi
-
+# Request for deleting snapshot archive
+read -p "Do you want to remove the snapshot archive? [y/N]: " remove_archive
+if [[ "$remove_archive" == "y" || "$remove_archive" == "Y" ]]; then
+  echo -e "${GRAY}Removing the snapshot archive...${NC}"
+  rm -f $RENAMED_SNAPSHOT_FILE_NAME
+  if [ $? -eq 0 ]; then
+    echo -e "${GREEN}↳ Snapshot archive removed successfully ✅${NC}\n"
+  else
+    echo -e "${RED}↳ Error removing snapshot archive ❌${NC}\n"
+    exit 1
+  fi
+else
+  echo -e "${BLUE}Skipping archive removal ⏩${NC}\n"
+fi
 # Final permission check
 echo -e "${GRAY}Performing final permission check...${NC}"
 chmod -R 777 geth 2>/dev/null || true
