@@ -176,6 +176,8 @@ Will shut down the node and WIPE ALL DATA. Proceed with caution!
 
 Run progress.sh to estimate remaining sync time and speed.
 
+Uses `Cast` command from Foundry tool set. Installation instructions here: [Foundry Installation](https://getfoundry.sh/).
+
 ```sh
 ./progress.sh
 ```
