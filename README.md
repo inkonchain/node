@@ -2,7 +2,7 @@
 
 > Forked and customized from https://github.com/smartcontracts/simple-optimism-node
 
-A simple docker compose script for launching full / archive node for the Ink chain.
+A simple Docker Compose script for launching full / archive node for the Ink chain.
 
 ## Recommended Hardware
 
@@ -20,18 +20,18 @@ A simple docker compose script for launching full / archive node for the Ink cha
 
 ## Installation and Configuration
 
-### Install docker and docker compose
+### Install docker and Docker Compose
 
-> Note: If you're not logged in as root, you'll need to log out and log in again after installation to complete the docker installation.
+> Note: If you're not logged in as root, you’ll need to log out and log back in after installation to complete the Docker installation.
 
-Note: This command installs docker and docker compose for Ubuntu. For windows and mac desktop or laptop, please use Docker Desktop. For other OS, please find instructions in Google.
+Note: This command installs docker and Docker Compose for Ubuntu. For windows and mac desktop or laptop, please use Docker Desktop. For other OS, please find instructions in Google.
 
 ```sh
 # Update and upgrade packages
 sudo apt-get update
 sudo apt-get upgrade -y
 
-### Docker and docker compose prerequisites
+### Docker and Docker Compose prerequisites
 sudo apt-get install -y curl
 sudo apt-get install -y gnupg
 sudo apt-get install -y ca-certificates
@@ -41,17 +41,17 @@ sudo apt-get install -y lsb-release
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-### Add Docker and docker compose support to the Ubuntu's packages list
+### Add Docker and Docker Compose support to the Ubuntu's packages list
 echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 sudo apt-get update
 
-### Install docker and docker compose on Ubuntu
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+### Install docker and Docker Compose on Ubuntu
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose
 
 sudo usermod -aG docker $(whoami)
 
-### Verify the Docker and docker compose install on Ubuntu
+### Verify the Docker and Docker Compose install on Ubuntu
 sudo docker run hello-world
 ```
 
@@ -110,7 +110,7 @@ Open `.env` with your editor of choice
 ### Start
 
 ```sh
-docker compose up -d --build
+Docker Compose up -d --build
 ```
 
 Will start the node in a detached shell (`-d`), meaning the node will continue to run in the background. We recommended to add `--build` to make sure that latest changes are being applied.
@@ -118,13 +118,13 @@ Will start the node in a detached shell (`-d`), meaning the node will continue t
 ### View logs
 
 ```sh
-docker compose logs -f --tail 10
+Docker Compose logs -f --tail 10
 ```
 
 To view logs of all containers.
 
 ```sh
-docker compose logs <CONTAINER_NAME> -f --tail 10
+Docker Compose logs <CONTAINER_NAME> -f --tail 10
 ```
 
 To view logs for a specific container. Most commonly used `<CONTAINER_NAME>` are:
@@ -136,7 +136,7 @@ To view logs for a specific container. Most commonly used `<CONTAINER_NAME>` are
 ### Stop
 
 ```sh
-docker compose down
+Docker Compose down
 ```
 
 Will shut down the node without wiping any volumes.
@@ -145,7 +145,7 @@ You can safely run this command and then restart the node again.
 ### Restart
 
 ```sh
-docker compose restart
+Docker Compose restart
 ```
 
 Will restart the node safely with minimal downtime but without upgrading the node.
@@ -156,8 +156,8 @@ Pull the latest updates from GitHub, and Docker Hub and rebuild the container.
 
 ```sh
 git pull
-docker compose pull
-docker compose up -d --build
+Docker Compose pull
+Docker Compose up -d --build
 ```
 
 Will upgrade your node with minimal downtime.
@@ -165,7 +165,7 @@ Will upgrade your node with minimal downtime.
 ### Wipe [DANGER]
 
 ```sh
-docker compose down -v
+Docker Compose down -v
 ```
 
 Will shut down the node and WIPE ALL DATA. Proceed with caution!
@@ -212,5 +212,5 @@ Navigate over to `Dashboards > Manage > Simple Node Dashboard` to see the dashbo
 If you experience "walking back L1Block with curr=0x0000...:0 next=0x0000...:0" for a long time after the Ecotone upgrade, consider these fixes:
 
 1. Wait for a few minutes. This issue usually resolves itself after some time.
-2. Restart docker compose: `docker compose down` and `docker compose up -d --build`
-3. If it's still not working, try setting `OP_GETH__SYNCMODE=full` in .env and restart docker compose
+2. Restart Docker Compose: `Docker Compose down` and `Docker Compose up -d --build`
+3. If it's still not working, try setting `OP_GETH__SYNCMODE=full` in .env and restart Docker Compose
