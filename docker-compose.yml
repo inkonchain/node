@@ -31,7 +31,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   op-node:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.11.0
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.11.1
     restart: unless-stopped
     stop_grace_period: 5m
     entrypoint: /scripts/start-op-node.sh
