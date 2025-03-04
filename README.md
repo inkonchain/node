@@ -213,4 +213,3 @@ If you experience "walking back L1Block with curr=0x0000...:0 next=0x0000...:0" 
 
 1. Wait for a few minutes. This issue usually resolves itself after some time.
 2. Restart docker compose: `docker compose down` and `docker compose up -d --build`
-3. If it's still not working, try setting `OP_GETH__SYNCMODE=full` in .env and restart docker compose

@@ -7,15 +7,6 @@ while [ ! -f /shared/initialized.txt ]; do
   sleep 1
 done
 
-# Determine syncmode based on NODE_TYPE
-if [ -z "$OP_GETH__SYNCMODE" ]; then
-  if [ "$NODE_TYPE" = "full" ]; then
-    export OP_GETH__SYNCMODE="snap"
-  else
-    export OP_GETH__SYNCMODE="full"
-  fi
-fi
-
 # Override Holocene
 if [ ! -z "$OVERRIDE_HOLOCENE" ]; then
   EXTENDED_ARG="$EXTENDED_ARG --override.holocene=$OVERRIDE_HOLOCENE"
@@ -56,6 +47,6 @@ exec geth \
   --nodiscover \
   --gpo.percentile=60 \
   --verbosity=3 \
-  --syncmode="$OP_GETH__SYNCMODE" \
+  --syncmode="full" \
   --gcmode="$NODE_TYPE" \
   $EXTENDED_ARG $@
