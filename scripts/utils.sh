@@ -9,7 +9,7 @@ function extract() {
   tar -xf $1 -C $2
 }
 
-# extract: Extracts a zst archive into an output location.
+# extractzst: Extracts a zst archive into an output location.
 # Arguments:
 #   arc: ZST archive to extract.
 #   loc: Location to extract to.
@@ -18,7 +18,7 @@ function extractzst() {
   tar --use-compress-program=unzstd -xf $1 -C $2
 }
 
-# extract: Extracts a lz4 archive into an output location.
+# extractlz4: Extracts a lz4 archive into an output location.
 # Arguments:
 #   arc: lz4 archive to extract.
 #   loc: Location to extract to.
