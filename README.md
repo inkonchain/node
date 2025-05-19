@@ -1,3 +1,6 @@
+[![License](https://img.shields.io/github/license/inkonchain/node)](https://github.com/inkonchain/node/blob/main/LICENSE)
+[![Twitter](https://img.shields.io/twitter/follow/inkonchain)](https://x.com/inkonchain)
+
 # Ink Node
 
 > Forked and customized from https://github.com/smartcontracts/simple-optimism-node
