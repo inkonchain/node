@@ -4,7 +4,7 @@ FROM ubuntu:22.04
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install required packages.
-RUN apt-get update && apt install -y curl wget git rsync build-essential openssl python3 python3-pip aria2 zstd lz4
+RUN apt-get update && apt-get install -y curl wget git rsync build-essential openssl python3 python3-pip aria2 zstd lz4
 
 # Install Go.
 RUN curl -sSL https://golang.org/dl/go1.21.6.linux-amd64.tar.gz | tar -v -C /usr/local -xz
