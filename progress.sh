@@ -9,9 +9,16 @@ error_exit() {
     exit 1
 }
 
-# Load Environment Variables
+# Load Environment Variables - parse line by line to correctly handle values with spaces
 if [ -f .env ]; then
-    export $(cat .env | grep -v '#' | sed 's/\r$//' | awk '/=/ {print $1}' ) || error_exit "Failed to load .env file"
+    while IFS= read -r line || [ -n "$line" ]; do
+        # Skip blank lines and comment lines
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        # Only export lines that contain an assignment
+        if [[ "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; then
+            export "$line"
+        fi
+    done < .env
 fi
 
 # Set default RPC URL with error checking
@@ -81,3 +88,4 @@ if [ $HOURS -gt 24 ] ; then
    DAYS=$((HOURS / 24))
    echo "Days until sync complete: $DAYS"
 fi
+
