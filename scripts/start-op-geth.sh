@@ -43,8 +43,6 @@ exec geth \
   --txpool.lifetime=12h0m0s \
   --rpc.txfeecap=4 \
   --rpc.evmtimeout=0 \
-  --maxpeers=0 \
-  --nodiscover \
   --gpo.percentile=60 \
   --verbosity=3 \
   --syncmode="full" \
