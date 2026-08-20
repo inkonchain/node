@@ -1,6 +1,7 @@
 services:
   healthcheck:
-    image: ethereumoptimism/replica-healthcheck:${IMAGE_TAG__HEALTHCHECK:-latest}
+    # SECURITY FIX: Use versioned digest-pinned references instead of floating "latest" tags
+    image: ${IMAGE__HEALTHCHECK:-ethereumoptimism/replica-healthcheck:1.2.6@sha256:ff02898ad2cf7fff9243cdcdab319b6c9d966585743f7800fb96bc78288001ab}
     platform: linux/amd64
     restart: unless-stopped
     env_file:
@@ -8,7 +9,8 @@ services:
       - ./envs/${NETWORK_NAME}/healthcheck.env
       - .env
     ports:
-      - ${PORT__HEALTHCHECK_METRICS:-7300}:7300
+      # SECURITY FIX: Bind host port to localhost (127.0.0.1) only
+      - 127.0.0.1:${PORT__HEALTHCHECK_METRICS:-7300}:7300
 
   op-geth:
     image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4
@@ -19,12 +21,14 @@ services:
       - ./envs/${NETWORK_NAME}/op-geth.env
       - .env
     volumes:
-      - ./scripts/:/scripts
+      # SECURITY FIX: Mount scripts as read-only (ro)
+      - ./scripts/:/scripts:ro
       - shared:/shared
       - op_geth:/geth
     ports:
-      - ${PORT__OP_GETH_HTTP:-9993}:8545
-      - ${PORT__OP_GETH_WS:-9994}:8546
+      # SECURITY FIX: Expose HTTP/WS RPC only to localhost
+      - 127.0.0.1:${PORT__OP_GETH_HTTP:-9993}:8545
+      - 127.0.0.1:${PORT__OP_GETH_WS:-9994}:8546
       - ${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/udp
       - ${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/tcp
     extra_hosts:
@@ -39,12 +43,13 @@ services:
       - ./envs/${NETWORK_NAME}/op-node.env
       - .env
     volumes:
-      - ./scripts/:/scripts
+      - ./scripts/:/scripts:ro
       - shared:/shared
     ports:
       - ${PORT__OP_NODE_P2P:-9003}:9003/udp
       - ${PORT__OP_NODE_P2P:-9003}:9003/tcp
-      - ${PORT__OP_NODE_HTTP:-9545}:9545
+      # SECURITY FIX: Expose node RPC only to localhost
+      - 127.0.0.1:${PORT__OP_NODE_HTTP:-9545}:9545
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -57,45 +62,54 @@ services:
       - ./envs/${NETWORK_NAME}/op-geth.env
       - .env
     volumes:
-      - ./scripts/:/scripts
+      - ./scripts/:/scripts:ro
       - shared:/shared
       - op_geth:/geth
       - geth:/legacy-geth
       - torrent_downloads:/downloads
 
   prometheus:
-    image: prom/prometheus:${IMAGE_TAG__PROMETHEUS:-latest}
+    # SECURITY FIX: Use versioned digest-pinned references
+    image: ${IMAGE__PROMETHEUS:-prom/prometheus:v3.14.0@sha256:e906cef998316bbe319f98711e1b4d8613ad37e14b08ff831d7036e77b7464f9}
     restart: unless-stopped
     env_file:
       - .env
     volumes:
-      - ./docker/prometheus:/etc/prometheus
+      - ./docker/prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
     ports:
-      - ${PORT__PROMETHEUS:-9090}:9090
+      - 127.0.0.1:${PORT__PROMETHEUS:-9090}:9090
 
   grafana:
-    image: grafana/grafana:${IMAGE_TAG__GRAFANA:-9.3.0}
+    image: ${IMAGE__GRAFANA:-grafana/grafana:9.3.0}
     restart: unless-stopped
     env_file:
       - ./envs/common/grafana.env
+      - .env
     volumes:
       - ./docker/grafana/provisioning/:/etc/grafana/provisioning/:ro
-      - ./docker/grafana/dashboards/simple_node_dashboard.json:/var/lib/grafana/dashboards/simple_node_dashboard.json
+      - ./docker/grafana/dashboards/simple_node_dashboard.json:/var/lib/grafana/dashboards/simple_node_dashboard.json:ro
       - grafana_data:/var/lib/grafana
     ports:
-      - ${PORT__GRAFANA:-3000}:3000
+      - 127.0.0.1:${PORT__GRAFANA:-3000}:3000
 
   influxdb:
-    image: influxdb:${IMAGE_TAG__INFLUXDB:-1.8}
+    image: ${IMAGE__INFLUXDB:-influxdb:1.8}
     restart: unless-stopped
     env_file:
       - ./envs/common/influxdb.env
+      - .env
+    environment:
+      # SECURITY FIX: Enforce InfluxDB authentication and remove fixed/hardcoded credentials
+      INFLUXDB_HTTP_AUTH_ENABLED: "true"
+      INFLUXDB_ADMIN_USER: ${INFLUXDB__ADMIN_USER:-admin}
+      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB__ADMIN_PASSWORD:?Set INFLUXDB__ADMIN_PASSWORD in .env}
+      INFLUXDB_DB: opgeth
     volumes:
-      - ./docker/influxdb/influx_init.iql:/docker-entrypoint-initdb.d/influx_init.iql
+      - ./docker/influxdb/influx_init.iql:/docker-entrypoint-initdb.d/influx_init.iql:ro
       - influxdb_data:/var/lib/influxdb
     ports:
-      - ${PORT__INFLUXDB:-8086}:8086
+      - 127.0.0.1:${PORT__INFLUXDB:-8086}:8086
 
 volumes:
   geth:
