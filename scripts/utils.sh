@@ -52,6 +52,7 @@ function verify_sha256_checksum() {
   local expected_hash checksum_name extra actual_hash
 
   read -r expected_hash checksum_name extra < "$checksum_path"
+  checksum_name="${checksum_name#\*}"
 
   if [[ -z "$expected_hash" || -z "$checksum_name" || -n "$extra" ]]; then
     echo "Unexpected checksum file format: $checksum_path" >&2
