@@ -7,26 +7,36 @@ while [ ! -f /shared/initialized.txt ]; do
   sleep 1
 done
 
-# Override Holocene
-if [ ! -z "$OVERRIDE_HOLOCENE" ]; then
+# Keep the container listener reachable through Docker while restricting browser and Host-header access by default.
+HTTP_CORS_DOMAIN="${OP_GETH_HTTP_CORS_DOMAIN:-http://localhost,http://127.0.0.1}"
+HTTP_VHOSTS="${OP_GETH_HTTP_VHOSTS:-op-geth,localhost,127.0.0.1}"
+HTTP_API="${OP_GETH_HTTP_API:-eth,net,web3}"
+AUTHRPC_VHOSTS="${OP_GETH_AUTHRPC_VHOSTS:-op-geth,localhost,127.0.0.1}"
+INFLUXDB_USERNAME="${INFLUXDB_WRITE_USER:?Set INFLUXDB_WRITE_USER in .env}"
+INFLUXDB_PASSWORD="${INFLUXDB_WRITE_USER_PASSWORD:?Set INFLUXDB_WRITE_USER_PASSWORD in .env}"
+
+# Override Holocene.
+if [ -n "$OVERRIDE_HOLOCENE" ]; then
   EXTENDED_ARG="$EXTENDED_ARG --override.holocene=$OVERRIDE_HOLOCENE"
 fi
 
 # Start op-geth.
 exec geth \
-  --op-network=$NETWORK_NAME \
+  --op-network="$NETWORK_NAME" \
   --datadir="$BEDROCK_DATADIR" \
   --http \
-  --http.corsdomain="*" \
-  --http.vhosts="*" \
+  --http.corsdomain="$HTTP_CORS_DOMAIN" \
+  --http.vhosts="$HTTP_VHOSTS" \
   --http.addr=0.0.0.0 \
   --http.port=8545 \
-  --http.api=eth,engine,web3,debug,net \
+  --http.api="$HTTP_API" \
   --metrics \
   --metrics.influxdb \
   --metrics.influxdb.endpoint=http://influxdb:8086 \
   --metrics.influxdb.database=opgeth \
-  --authrpc.vhosts="*" \
+  --metrics.influxdb.username="$INFLUXDB_USERNAME" \
+  --metrics.influxdb.password="$INFLUXDB_PASSWORD" \
+  --authrpc.vhosts="$AUTHRPC_VHOSTS" \
   --authrpc.addr=0.0.0.0 \
   --authrpc.port=8551 \
   --authrpc.jwtsecret=/shared/jwt.txt \
@@ -49,4 +59,4 @@ exec geth \
   --verbosity=3 \
   --syncmode="full" \
   --gcmode="$NODE_TYPE" \
-  $EXTENDED_ARG $@
+  $EXTENDED_ARG "$@"

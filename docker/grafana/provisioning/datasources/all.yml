@@ -6,7 +6,7 @@ deleteDatasources:
 
 datasources:
   - access: "proxy"
-    editable: true
+    editable: false
     is_default: true
     name: "Prometheus"
     uid: "6R74VAnVz"
@@ -15,12 +15,15 @@ datasources:
     url: "http://prometheus:9090"
     version: 1
   - access: "proxy"
-    editable: true
+    database: "opgeth"
+    editable: false
     is_default: false
     name: "InfluxDB (op-geth)"
     uid: "4knV40nVb"
     org_id: 1
     type: "influxdb"
-    database: "opgeth"
     url: "http://influxdb:8086"
-    version: 1
+    user: $INFLUXDB_READ_USER
+    secureJsonData:
+      password: $INFLUXDB_READ_USER_PASSWORD
+    version: 2
