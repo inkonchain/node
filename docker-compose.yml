@@ -1,6 +1,6 @@
 services:
   healthcheck:
-    image: ethereumoptimism/replica-healthcheck:${IMAGE_TAG__HEALTHCHECK:-latest}
+    image: ethereumoptimism/replica-healthcheck:${IMAGE_TAG__HEALTHCHECK:?Set IMAGE_TAG__HEALTHCHECK to an immutable version tag in .env}
     platform: linux/amd64
     restart: unless-stopped
     env_file:
@@ -8,7 +8,7 @@ services:
       - ./envs/${NETWORK_NAME}/healthcheck.env
       - .env
     ports:
-      - ${PORT__HEALTHCHECK_METRICS:-7300}:7300
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${PORT__HEALTHCHECK_METRICS:-7300}:7300"
 
   op-geth:
     image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4
@@ -23,10 +23,10 @@ services:
       - shared:/shared
       - op_geth:/geth
     ports:
-      - ${PORT__OP_GETH_HTTP:-9993}:8545
-      - ${PORT__OP_GETH_WS:-9994}:8546
-      - ${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/udp
-      - ${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/tcp
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${PORT__OP_GETH_HTTP:-9993}:8545"
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${PORT__OP_GETH_WS:-9994}:8546"
+      - "${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/udp"
+      - "${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/tcp"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -42,9 +42,9 @@ services:
       - ./scripts/:/scripts
       - shared:/shared
     ports:
-      - ${PORT__OP_NODE_P2P:-9003}:9003/udp
-      - ${PORT__OP_NODE_P2P:-9003}:9003/tcp
-      - ${PORT__OP_NODE_HTTP:-9545}:9545
+      - "${PORT__OP_NODE_P2P:-9003}:9003/udp"
+      - "${PORT__OP_NODE_P2P:-9003}:9003/tcp"
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${PORT__OP_NODE_HTTP:-9545}:9545"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -64,7 +64,7 @@ services:
       - torrent_downloads:/downloads
 
   prometheus:
-    image: prom/prometheus:${IMAGE_TAG__PROMETHEUS:-latest}
+    image: prom/prometheus:${IMAGE_TAG__PROMETHEUS:?Set IMAGE_TAG__PROMETHEUS to an immutable version tag in .env}
     restart: unless-stopped
     env_file:
       - .env
@@ -72,30 +72,39 @@ services:
       - ./docker/prometheus:/etc/prometheus
       - prometheus_data:/prometheus
     ports:
-      - ${PORT__PROMETHEUS:-9090}:9090
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${PORT__PROMETHEUS:-9090}:9090"
 
   grafana:
-    image: grafana/grafana:${IMAGE_TAG__GRAFANA:-9.3.0}
+    image: grafana/grafana:${IMAGE_TAG__GRAFANA:?Set IMAGE_TAG__GRAFANA to an immutable version tag in .env}
     restart: unless-stopped
-    env_file:
-      - ./envs/common/grafana.env
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:?Set GRAFANA_ADMIN_USER in .env}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}
+      INFLUXDB_READ_USER: ${INFLUXDB_READ_USER:?Set INFLUXDB_READ_USER in .env}
+      INFLUXDB_READ_USER_PASSWORD: ${INFLUXDB_READ_USER_PASSWORD:?Set INFLUXDB_READ_USER_PASSWORD in .env}
     volumes:
       - ./docker/grafana/provisioning/:/etc/grafana/provisioning/:ro
       - ./docker/grafana/dashboards/simple_node_dashboard.json:/var/lib/grafana/dashboards/simple_node_dashboard.json
       - grafana_data:/var/lib/grafana
     ports:
-      - ${PORT__GRAFANA:-3000}:3000
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${PORT__GRAFANA:-3000}:3000"
 
   influxdb:
-    image: influxdb:${IMAGE_TAG__INFLUXDB:-1.8}
+    image: influxdb:${IMAGE_TAG__INFLUXDB:?Set IMAGE_TAG__INFLUXDB to an immutable version tag in .env}
     restart: unless-stopped
-    env_file:
-      - ./envs/common/influxdb.env
+    environment:
+      INFLUXDB_HTTP_AUTH_ENABLED: "true"
+      INFLUXDB_DB: opgeth
+      INFLUXDB_ADMIN_USER: ${INFLUXDB_ADMIN_USER:?Set INFLUXDB_ADMIN_USER in .env}
+      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_ADMIN_PASSWORD:?Set INFLUXDB_ADMIN_PASSWORD in .env}
+      INFLUXDB_WRITE_USER: ${INFLUXDB_WRITE_USER:?Set INFLUXDB_WRITE_USER in .env}
+      INFLUXDB_WRITE_USER_PASSWORD: ${INFLUXDB_WRITE_USER_PASSWORD:?Set INFLUXDB_WRITE_USER_PASSWORD in .env}
+      INFLUXDB_READ_USER: ${INFLUXDB_READ_USER:?Set INFLUXDB_READ_USER in .env}
+      INFLUXDB_READ_USER_PASSWORD: ${INFLUXDB_READ_USER_PASSWORD:?Set INFLUXDB_READ_USER_PASSWORD in .env}
     volumes:
-      - ./docker/influxdb/influx_init.iql:/docker-entrypoint-initdb.d/influx_init.iql
       - influxdb_data:/var/lib/influxdb
     ports:
-      - ${PORT__INFLUXDB:-8086}:8086
+      - "${HOST_BIND_ADDRESS:-127.0.0.1}:${PORT__INFLUXDB:-8086}:8086"
 
 volumes:
   geth:

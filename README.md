@@ -133,7 +133,22 @@ Configuration notes:
 - `.env` overrides the same variable for services that load `.env` in
   `docker-compose.yml`, including `op-geth`, `op-node`, `healthcheck`, and
   `bedrock-init`
+- `HOST_BIND_ADDRESS` defaults to `127.0.0.1`, so host-published HTTP and
+  monitoring services are local-only unless you explicitly choose another
+  interface and provide the required network controls.
+- Set unique, non-empty values for `GRAFANA_ADMIN_PASSWORD`,
+  `INFLUXDB_ADMIN_PASSWORD`, `INFLUXDB_WRITE_USER_PASSWORD`, and
+  `INFLUXDB_READ_USER_PASSWORD` in `.env` before starting the stack. These
+  values are required and are not stored in the repository.
+- Set explicit, reviewed values for `IMAGE_TAG__HEALTHCHECK`,
+  `IMAGE_TAG__PROMETHEUS`, `IMAGE_TAG__GRAFANA`, and `IMAGE_TAG__INFLUXDB`.
+  The Compose file has no mutable `latest` or floating-version fallback.
+- The InfluxDB initialization variables apply only when the data volume is
+  initialized for the first time. For an existing volume, create or rotate the
+  users through an authenticated administrative procedure before restarting
+  the stack; do not delete production data just to re-run initialization.
 - `envs/<network>/op-node.env` already supplies the network P2P defaults, so
+
   most first-time setups only need the `.env` values above
 - `PORT__OP_NODE_P2P` changes the published host port in `docker-compose.yml`.
   The in-container `op-node` listener still uses `9003`
@@ -231,12 +246,12 @@ healthcheck metrics to confirm the node is moving forward during early sync.
 
 ### Open Grafana
 
-Grafana is available at [http://localhost:3000](http://localhost:3000).
+Grafana is available at [http://localhost:3000](http://localhost:3000) by
+default because the Compose stack binds monitoring services to loopback.
 
-- Username: `admin`
-- Password: `ink`
-
-The preloaded dashboard is `Simple Node Dashboard`.
+Use the `GRAFANA_ADMIN_USER` and `GRAFANA_ADMIN_PASSWORD` values configured in
+`.env`. There is no repository-provided default password. The preloaded
+dashboard is `Simple Node Dashboard`.
 
 ## Operating The Node
 
