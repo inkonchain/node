@@ -22,6 +22,9 @@ exec geth \
   --http.addr=0.0.0.0 \
   --http.port=8545 \
   --http.api=eth,engine,web3,debug,net \
+  --ws \
+  --ws.addr=0.0.0.0 \
+  --ws.port=8546 \
   --metrics \
   --metrics.influxdb \
   --metrics.influxdb.endpoint=http://influxdb:8086 \
