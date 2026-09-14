@@ -199,6 +199,11 @@ Execution RPC for the current `op-geth` service:
 curl -fsS -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' http://127.0.0.1:9993
 ```
 
+The execution WebSocket RPC is available at `ws://127.0.0.1:9994` on the
+Docker host. `PORT__OP_GETH_WS` changes that published host port; the container
+listens on `8546`. This endpoint uses plain WebSocket (`ws://`), not TLS
+(`wss://`). The client's default WebSocket API and origin policies are retained.
+
 Rollup node RPC:
 
 ```sh
