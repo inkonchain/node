@@ -7,11 +7,11 @@ source ./scripts/utils.sh
 # Common variables.
 INITIALIZED_FLAG=/shared/initialized.txt
 BEDROCK_JWT_PATH=/shared/jwt.txt
-GETH_DATA_DIR=$BEDROCK_DATADIR
-TORRENTS_DIR=/torrents/$NETWORK_NAME
+: "${BEDROCK_DATADIR:?BEDROCK_DATADIR is not set (expected from envs/<network>/op-geth.env)}"
+GETH_DATA_DIR="$BEDROCK_DATADIR"
 BEDROCK_TAR_PATH=/downloads/bedrock.tar
 BEDROCK_TAR_CHECKSUM_PATH=
-BEDROCK_TMP_PATH=/bedrock-tmp
+BEDROCK_TAR_DOWNLOAD=""
 
 function validate_snapshot_filename() {
   local snapshot_filename="$1"
@@ -70,6 +70,14 @@ fi
 
 echo "Bedrock node needs to be initialized..."
 echo "Initializing via download..."
+
+# Fail fast on an unknown node type: without this, a typo such as
+# NODE_TYPE=ful would silently fall through and sync from genesis as a
+# full node.
+if [ "$NODE_TYPE" != "archive" ] && [ "$NODE_TYPE" != "full" ]; then
+  echo "Unsupported node type: $NODE_TYPE (expected 'full' or 'archive')" >&2
+  exit 1
+fi
 
 # Resolve the latest archival geth datadir snapshot from the ChainSnap indexes.
 echo "Fetching download link..."
