@@ -30,9 +30,10 @@ repo still needs:
 - a validated `op-reth` service, image, and entrypoint in `docker-compose.yml`
 - an `op-node` engine endpoint that no longer points at `http://op-geth:8551`
 - archive init and snapshot handling that can consume `op-reth` snapshots where
-  available. The checked Sepolia Ink Gelato index already exposes
-  `reth/full/datadir` artifacts, but this repo does not use them yet and the
-  checked mainnet Ink index still only exposes geth archives
+  available. The Gelato ChainSnap indexes this repo used to resolve no longer
+  resolve, so the `archive` snapshot path is currently unavailable; Alchemy
+  publishes Ink snapshots for both networks at
+  <https://www.alchemy.com/snapshots/ink> as an alternative source
 - healthcheck and monitoring updates, which still target `op-geth` and the
   `opgeth` InfluxDB database
 - env and port naming that no longer assumes `op-geth`, such as
@@ -346,8 +347,9 @@ enode://c2dd4ad2f3f5dd2e3d6c77acbb4f96a73d692f3172181caf457863bd9ac0645c4b709b98
 
 ### `bedrock-init` exits quickly on a full node
 
-That is expected. `full` nodes do not download a snapshot. If you want a
-snapshot restore path, switch to `NODE_TYPE=archive`.
+That is expected. `full` nodes do not download a snapshot. `NODE_TYPE=archive`
+would restore from a snapshot, but the Gelato snapshot indexes are currently
+decommissioned (see below), so `full` is the working path for now.
 
 ### `bedrock-init` says `Bedrock node already initialized`
 
@@ -370,27 +372,29 @@ If image pulls or snapshot downloads fail, make sure the host can reach:
 
 - `docker.io`
 - `us-docker.pkg.dev`
-- `ink.t.snapshots.gelato.cloud`
-- `ink.snapshots.gelato.cloud`
 
-Archive geth snapshots for the current stack are resolved from these indexes:
+> The Gelato ChainSnap indexes below no longer resolve (both subdomains
+> return NXDOMAIN, verified against Cloudflare DNS), so `NODE_TYPE=archive`
+> currently fails with `Failed to resolve latest snapshot`. Until the
+> snapshot flow is repointed, run `NODE_TYPE=full`, or restore manually from
+> a third-party snapshot such as Alchemy's
+> [Ink snapshots](https://www.alchemy.com/snapshots/ink), which cover both
+> mainnet and testnet.
 
-- Sepolia: [https://ink.t.snapshots.gelato.cloud/index.html](https://ink.t.snapshots.gelato.cloud/index.html)
-- Mainnet: [https://ink.snapshots.gelato.cloud/index.html](https://ink.snapshots.gelato.cloud/index.html)
+Archive geth snapshots for the current stack were resolved from these (now
+decommissioned) indexes:
 
-`bedrock-init` downloads the matching `.sha256` file and verifies the archive
-before extraction. This is still a geth datadir path, not an `op-reth`
-bootstrap flow.
+- Sepolia: `https://ink.t.snapshots.gelato.cloud/index.html`
+- Mainnet: `https://ink.snapshots.gelato.cloud/index.html`
 
-At the time of this docs refresh, the Sepolia Ink Gelato index also exposes
-`reth/full/datadir` artifacts, but the checked mainnet Ink index does not yet
-show `reth` artifacts. This repository does not consume those `reth` snapshots
-yet.
+When the index is reachable, `bedrock-init` downloads the matching `.sha256`
+file and verifies the archive before extraction. This is still a geth datadir
+path, not an `op-reth` bootstrap flow.
 
 If `bedrock-init` exits with `Failed to resolve latest snapshot` or
 `Unexpected snapshot filename format`, the index is unreachable or its format
 changed. Switch back to `NODE_TYPE=full` and retry, or pick a direct archive
-from the index page and update the script before retrying.
+from another snapshot source and update the script before retrying.
 
 If `bedrock-init` exits with `Unexpected checksum file format`,
 `Checksum file does not match downloaded archive`, or `SHA256 verification
