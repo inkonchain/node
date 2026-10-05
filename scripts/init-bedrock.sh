@@ -11,7 +11,10 @@ BEDROCK_JWT_PATH=/shared/jwt.txt
 GETH_DATA_DIR="$BEDROCK_DATADIR"
 BEDROCK_TAR_PATH=/downloads/bedrock.tar
 BEDROCK_TAR_CHECKSUM_PATH=
-BEDROCK_TAR_DOWNLOAD=""
+# Optional operator override: a geth datadir tarball URL (with a matching
+# <url>.sha256). Honoured in archive mode, so a node can bootstrap from a
+# snapshot mirror even when the hosted index below is unreachable.
+BEDROCK_TAR_DOWNLOAD="${BEDROCK_TAR_DOWNLOAD:-}"
 
 function validate_snapshot_filename() {
   local snapshot_filename="$1"
@@ -27,13 +30,28 @@ function validate_snapshot_filename() {
   fi
 }
 
+function snapshot_bootstrap_hint() {
+  cat >&2 <<'EOF'
+Either set NODE_TYPE=full in .env to sync from genesis, or set
+BEDROCK_TAR_DOWNLOAD in .env to a geth datadir tarball that has a
+matching <url>.sha256 checksum file.
+EOF
+}
+
 function resolve_latest_snapshot_filename() {
   local index_url="$1"
   local filename_regex="$2"
-  local snapshot_filename
+  local index_content snapshot_filename
+
+  if ! index_content="$(curl -fsS "$index_url")"; then
+    echo "Could not fetch the snapshot index: $index_url" >&2
+    echo "The hosted snapshot index is unreachable or no longer published." >&2
+    snapshot_bootstrap_hint
+    exit 1
+  fi
 
   snapshot_filename="$(
-    curl -fsS "$index_url" | python3 -c '
+    printf '%s' "$index_content" | python3 -c '
 import re
 import sys
 
@@ -48,13 +66,13 @@ matches = sorted(
 )
 
 if not matches:
-    print("No matching snapshot files found in index", file=sys.stderr)
     sys.exit(1)
 
 print(matches[0])
 ' "$filename_regex"
   )" || {
-    echo "Failed to resolve latest snapshot from $index_url" >&2
+    echo "No snapshot file matching $filename_regex was listed at $index_url" >&2
+    snapshot_bootstrap_hint
     exit 1
   }
 
@@ -83,7 +101,9 @@ fi
 echo "Fetching download link..."
 
 if [ "$NODE_TYPE" = "archive" ]; then
-  if [ "$NETWORK_NAME" = "ink-sepolia" ]; then
+  if [ -n "$BEDROCK_TAR_DOWNLOAD" ]; then
+    echo "Using snapshot from BEDROCK_TAR_DOWNLOAD: $BEDROCK_TAR_DOWNLOAD"
+  elif [ "$NETWORK_NAME" = "ink-sepolia" ]; then
     SNAPSHOT_FILENAME="$(resolve_latest_snapshot_filename \
       "https://ink.t.snapshots.gelato.cloud/index.html" \
       'ink-sepolia-geth-archival-datadir-[0-9]+-[0-9]+\.tar(?:\.(?:zst|lz4))?')"
@@ -110,13 +130,17 @@ if [ -n "$BEDROCK_TAR_DOWNLOAD" ]; then
   BEDROCK_TAR_CHECKSUM_PATH="${BEDROCK_TAR_PATH}.sha256"
 
   echo "Downloading bedrock.tar checksum..."
-  curl -fsS "$BEDROCK_TAR_DOWNLOAD.sha256" -o "$BEDROCK_TAR_CHECKSUM_PATH"
+  if ! curl -fsS "$BEDROCK_TAR_DOWNLOAD.sha256" -o "$BEDROCK_TAR_CHECKSUM_PATH"; then
+    echo "Could not fetch the checksum file: $BEDROCK_TAR_DOWNLOAD.sha256" >&2
+    echo "Every snapshot URL must be accompanied by a <url>.sha256 file." >&2
+    exit 1
+  fi
 
   echo "Downloading bedrock.tar..."
   download "$BEDROCK_TAR_DOWNLOAD" "$BEDROCK_TAR_PATH"
 
   echo "Verifying bedrock.tar checksum..."
-  verify_sha256_checksum "$BEDROCK_TAR_PATH" "$BEDROCK_TAR_CHECKSUM_PATH" "$SNAPSHOT_FILENAME"
+  verify_sha256_checksum "$BEDROCK_TAR_PATH" "$BEDROCK_TAR_CHECKSUM_PATH" "$(basename "$BEDROCK_TAR_DOWNLOAD")"
 
   echo "Extracting bedrock.tar..."
   if [[ "$BEDROCK_TAR_DOWNLOAD" == *.zst ]]; then
