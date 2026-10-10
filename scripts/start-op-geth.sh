@@ -36,6 +36,7 @@ exec geth \
   --discovery.port="${PORT__OP_GETH_P2P:-39393}" \
   --db.engine=pebble \
   --state.scheme=hash \
+  --txlookuplimit=0 \
   --history.state=0 \
   --history.transactions=0 \
   --txpool.pricebump=10 \
