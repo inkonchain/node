@@ -116,7 +116,6 @@ NODE_TYPE=full
 OP_NODE__RPC_ENDPOINT=<your Sepolia execution RPC>
 OP_NODE__L1_BEACON=<your Sepolia beacon API>
 OP_NODE__RPC_TYPE=basic
-HEALTHCHECK__REFERENCE_RPC_PROVIDER=https://rpc-gel-sepolia.inkonchain.com
 ```
 
 Configuration notes:
@@ -137,8 +136,11 @@ Configuration notes:
   most first-time setups only need the `.env` values above
 - `PORT__OP_NODE_P2P` changes the published host port in `docker-compose.yml`.
   The in-container `op-node` listener still uses `9003`
-- For `ink-mainnet`, switch the healthcheck reference RPC to
-  `https://rpc-gel.inkonchain.com`
+- The healthcheck reference RPC is selected per network by
+  `envs/<network>/healthcheck.env`. `docker-compose.yml` loads `.env` after
+  those files, so set `HEALTHCHECK__REFERENCE_RPC_PROVIDER` in `.env` only to
+  override it, and never leave a hardcoded Sepolia value there when
+  `NETWORK_NAME=ink-mainnet`
 - Advanced wrapper inputs such as `OVERRIDE_HOLOCENE` and `EXTENDED_ARG` live
   in `.env.example`. The shell entrypoints append them to both `op-geth` and
   `op-node`, so leave them empty unless you know the flag is compatible with
