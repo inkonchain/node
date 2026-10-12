@@ -13,7 +13,9 @@ P2P_PORT="9003"
 L1_RPC_ENDPOINT="$OP_NODE__RPC_ENDPOINT"
 L1_BEACON_ENDPOINT="$OP_NODE__L1_BEACON"
 L1_RPC_TYPE="$OP_NODE__RPC_TYPE"
-export EXTENDED_ARG="${EXTENDED_ARG:-} --network=$NETWORK_NAME --rollup.load-protocol-versions=true --rollup.halt=major"
+# op-node dropped --rollup.load-protocol-versions and --rollup.halt in v1.19.0;
+# leaving them here makes the process exit with "flag provided but not defined".
+export EXTENDED_ARG="${EXTENDED_ARG:-} --network=$NETWORK_NAME"
 
 # Override Holocene
 if [ ! -z "$OVERRIDE_HOLOCENE" ]; then
