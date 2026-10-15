@@ -15,7 +15,7 @@ if [ -f .env ]; then
 fi
 
 # Set default RPC URL with error checking
-export ETH_RPC_URL=${ETH_RPC_URL:-http://localhost:${PORT__OP_GETH_HTTP:-9993}}
+export ETH_RPC_URL=${ETH_RPC_URL:-http://localhost:${PORT__OP_RETH_HTTP:-9993}}
 [ -z "$ETH_RPC_URL" ] && error_exit "ETH_RPC_URL is not set"
 
 # Get chain ID with error handling

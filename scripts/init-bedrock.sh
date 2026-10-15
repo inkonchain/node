@@ -7,59 +7,18 @@ source ./scripts/utils.sh
 # Common variables.
 INITIALIZED_FLAG=/shared/initialized.txt
 BEDROCK_JWT_PATH=/shared/jwt.txt
-GETH_DATA_DIR=$BEDROCK_DATADIR
-TORRENTS_DIR=/torrents/$NETWORK_NAME
-BEDROCK_TAR_PATH=/downloads/bedrock.tar
-BEDROCK_TAR_CHECKSUM_PATH=
-BEDROCK_TMP_PATH=/bedrock-tmp
+RETH_DATA_DIR=$BEDROCK_DATADIR
+SNAPSHOT_PATH=/downloads/snapshot.tar.zst
+SNAPSHOT_CHECKSUM_PATH=/downloads/snapshot.tar.zst.sha256
+SNAPSHOTS_BASE_URL="https://snapshots.optimism.io/api/snapshots"
 
 function validate_snapshot_filename() {
   local snapshot_filename="$1"
 
-  if [[ -z "$snapshot_filename" ]]; then
-    echo "Snapshot filename lookup returned an empty response" >&2
-    exit 1
-  fi
-
-  if [[ ! "$snapshot_filename" =~ ^[A-Za-z0-9._-]+\.tar(\.zst|\.lz4)?$ ]]; then
+  if [[ ! "$snapshot_filename" =~ ^[A-Za-z0-9._-]+\.tar\.zst$ ]]; then
     echo "Unexpected snapshot filename format: $snapshot_filename" >&2
     exit 1
   fi
-}
-
-function resolve_latest_snapshot_filename() {
-  local index_url="$1"
-  local filename_regex="$2"
-  local snapshot_filename
-
-  snapshot_filename="$(
-    curl -fsS "$index_url" | python3 -c '
-import re
-import sys
-
-filename_pattern = re.compile(sys.argv[1])
-timestamp_pattern = re.compile(r"-(\d+)\.tar(?:\.(?:zst|lz4))?$")
-content = sys.stdin.read()
-
-matches = sorted(
-    {match.group(0) for match in filename_pattern.finditer(content)},
-    key=lambda name: int(timestamp_pattern.search(name).group(1)),
-    reverse=True,
-)
-
-if not matches:
-    print("No matching snapshot files found in index", file=sys.stderr)
-    sys.exit(1)
-
-print(matches[0])
-' "$filename_regex"
-  )" || {
-    echo "Failed to resolve latest snapshot from $index_url" >&2
-    exit 1
-  }
-
-  validate_snapshot_filename "$snapshot_filename"
-  echo "$snapshot_filename"
 }
 
 # Exit early if we've already initialized.
@@ -71,58 +30,46 @@ fi
 echo "Bedrock node needs to be initialized..."
 echo "Initializing via download..."
 
-# Resolve the latest archival geth datadir snapshot from the ChainSnap indexes.
-echo "Fetching download link..."
-
-if [ "$NODE_TYPE" = "archive" ]; then
-  if [ "$NETWORK_NAME" = "ink-sepolia" ]; then
-    SNAPSHOT_FILENAME="$(resolve_latest_snapshot_filename \
-      "https://ink.t.snapshots.gelato.cloud/index.html" \
-      'ink-sepolia-geth-archival-datadir-[0-9]+-[0-9]+\.tar(?:\.(?:zst|lz4))?')"
-    BEDROCK_TAR_DOWNLOAD="https://ink.t.snapshots.gelato.cloud/geth/archival/datadir/$SNAPSHOT_FILENAME"
-    echo "Using snapshot file: $SNAPSHOT_FILENAME"
-  elif [ "$NETWORK_NAME" = "ink-mainnet" ]; then
-    SNAPSHOT_FILENAME="$(resolve_latest_snapshot_filename \
-      "https://ink.snapshots.gelato.cloud/index.html" \
-      'ink-geth-archival-datadir-[0-9]+-[0-9]+\.tar(?:\.(?:zst|lz4))?')"
-    BEDROCK_TAR_DOWNLOAD="https://ink.snapshots.gelato.cloud/geth/archival/datadir/$SNAPSHOT_FILENAME"
-    echo "Using snapshot file: $SNAPSHOT_FILENAME"
-  else
-    echo "Unsupported archive network: $NETWORK_NAME" >&2
+# Resolve the latest op-reth snapshot published at https://snapshots.optimism.io/
+# for this network. Snapshot networks are named <network>-0.
+case "$NODE_TYPE" in
+  full | archive) ;;
+  *)
+    echo "Unsupported NODE_TYPE: $NODE_TYPE (expected full or archive)" >&2
     exit 1
-  fi
-fi
+    ;;
+esac
 
-if [ -n "$BEDROCK_TAR_DOWNLOAD" ]; then
-  if [[ "$BEDROCK_TAR_DOWNLOAD" == *.zst ]]; then
-    BEDROCK_TAR_PATH+=".zst"
-  elif [[ "$BEDROCK_TAR_DOWNLOAD" == *.lz4 ]]; then
-    BEDROCK_TAR_PATH+=".lz4"
-  fi
-  BEDROCK_TAR_CHECKSUM_PATH="${BEDROCK_TAR_PATH}.sha256"
+case "$NETWORK_NAME" in
+  ink-mainnet | ink-sepolia) ;;
+  *)
+    echo "Unsupported network: $NETWORK_NAME" >&2
+    exit 1
+    ;;
+esac
 
-  echo "Downloading bedrock.tar checksum..."
-  curl -fsS "$BEDROCK_TAR_DOWNLOAD.sha256" -o "$BEDROCK_TAR_CHECKSUM_PATH"
+SNAPSHOT_URL="$SNAPSHOTS_BASE_URL/$NETWORK_NAME-0/latest/$NODE_TYPE"
 
-  echo "Downloading bedrock.tar..."
-  download "$BEDROCK_TAR_DOWNLOAD" "$BEDROCK_TAR_PATH"
+echo "Downloading snapshot checksum..."
+curl -fsSL "$SNAPSHOT_URL/checksum" -o "$SNAPSHOT_CHECKSUM_PATH"
 
-  echo "Verifying bedrock.tar checksum..."
-  verify_sha256_checksum "$BEDROCK_TAR_PATH" "$BEDROCK_TAR_CHECKSUM_PATH" "$SNAPSHOT_FILENAME"
+# The checksum file is "<sha256>  <snapshot filename>".
+read -r _ SNAPSHOT_FILENAME _ < "$SNAPSHOT_CHECKSUM_PATH"
+validate_snapshot_filename "$SNAPSHOT_FILENAME"
+echo "Using snapshot file: $SNAPSHOT_FILENAME"
 
-  echo "Extracting bedrock.tar..."
-  if [[ "$BEDROCK_TAR_DOWNLOAD" == *.zst ]]; then
-    extractzst "$BEDROCK_TAR_PATH" "$GETH_DATA_DIR"
-  elif [[ "$BEDROCK_TAR_DOWNLOAD" == *.lz4 ]]; then
-    extractlz4 "$BEDROCK_TAR_PATH" "$GETH_DATA_DIR"
-  else
-    extract "$BEDROCK_TAR_PATH" "$GETH_DATA_DIR"
-  fi
+echo "Downloading snapshot..."
+download "$SNAPSHOT_URL/archive" "$SNAPSHOT_PATH"
 
-  # Remove tar file to save disk space
-  rm "$BEDROCK_TAR_PATH"
-  rm "$BEDROCK_TAR_CHECKSUM_PATH"
-fi
+echo "Verifying snapshot checksum..."
+verify_sha256_checksum "$SNAPSHOT_PATH" "$SNAPSHOT_CHECKSUM_PATH" "$SNAPSHOT_FILENAME"
+
+echo "Extracting snapshot..."
+extractzst "$SNAPSHOT_PATH" "$RETH_DATA_DIR"
+
+# Remove downloaded files to save disk space
+rm "$SNAPSHOT_PATH"
+rm "$SNAPSHOT_CHECKSUM_PATH"
 
 echo "Creating JWT..."
 mkdir -p "$(dirname "$BEDROCK_JWT_PATH")"

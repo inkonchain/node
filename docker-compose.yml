@@ -10,28 +10,28 @@ services:
     ports:
       - ${PORT__HEALTHCHECK_METRICS:-7300}:7300
 
-  op-geth:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-geth:v1.101503.4
+  op-reth:
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-reth:v2.6.0
     restart: unless-stopped
     stop_grace_period: 5m
-    entrypoint: /scripts/start-op-geth.sh
+    entrypoint: /scripts/start-op-reth.sh
     env_file:
-      - ./envs/${NETWORK_NAME}/op-geth.env
+      - ./envs/${NETWORK_NAME}/op-reth.env
       - .env
     volumes:
       - ./scripts/:/scripts
       - shared:/shared
-      - op_geth:/geth
+      - op_reth:/reth
     ports:
-      - ${PORT__OP_GETH_HTTP:-9993}:8545
-      - ${PORT__OP_GETH_WS:-9994}:8546
-      - ${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/udp
-      - ${PORT__OP_GETH_P2P:-39393}:${PORT__OP_GETH_P2P:-39393}/tcp
+      - ${PORT__OP_RETH_HTTP:-9993}:8545
+      - ${PORT__OP_RETH_WS:-9994}:8546
+      - ${PORT__OP_RETH_P2P:-39393}:${PORT__OP_RETH_P2P:-39393}/udp
+      - ${PORT__OP_RETH_P2P:-39393}:${PORT__OP_RETH_P2P:-39393}/tcp
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   op-node:
-    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.13.2
+    image: us-docker.pkg.dev/oplabs-tools-artifacts/images/op-node:v1.19.8
     restart: unless-stopped
     stop_grace_period: 5m
     entrypoint: /scripts/start-op-node.sh
@@ -54,14 +54,13 @@ services:
       dockerfile: Dockerfile.bedrock-init
     entrypoint: /scripts/init-bedrock.sh
     env_file:
-      - ./envs/${NETWORK_NAME}/op-geth.env
+      - ./envs/${NETWORK_NAME}/op-reth.env
       - .env
     volumes:
       - ./scripts/:/scripts
       - shared:/shared
-      - op_geth:/geth
-      - geth:/legacy-geth
-      - torrent_downloads:/downloads
+      - op_reth:/reth
+      - snapshot_downloads:/downloads
 
   prometheus:
     image: prom/prometheus:${IMAGE_TAG__PROMETHEUS:-latest}
@@ -86,22 +85,9 @@ services:
     ports:
       - ${PORT__GRAFANA:-3000}:3000
 
-  influxdb:
-    image: influxdb:${IMAGE_TAG__INFLUXDB:-1.8}
-    restart: unless-stopped
-    env_file:
-      - ./envs/common/influxdb.env
-    volumes:
-      - ./docker/influxdb/influx_init.iql:/docker-entrypoint-initdb.d/influx_init.iql
-      - influxdb_data:/var/lib/influxdb
-    ports:
-      - ${PORT__INFLUXDB:-8086}:8086
-
 volumes:
-  geth:
   prometheus_data:
   grafana_data:
-  influxdb_data:
   shared:
-  op_geth:
-  torrent_downloads:
+  op_reth:
+  snapshot_downloads:

@@ -10,3 +10,8 @@ scrape_configs:
   - job_name: 'op-node'
     static_configs:
     - targets: ['op-node:7300']
+
+  - job_name: 'op-reth'
+    metrics_path: /metrics
+    static_configs:
+    - targets: ['op-reth:9001']

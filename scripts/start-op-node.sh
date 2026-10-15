@@ -13,7 +13,7 @@ P2P_PORT="9003"
 L1_RPC_ENDPOINT="$OP_NODE__RPC_ENDPOINT"
 L1_BEACON_ENDPOINT="$OP_NODE__L1_BEACON"
 L1_RPC_TYPE="$OP_NODE__RPC_TYPE"
-export EXTENDED_ARG="${EXTENDED_ARG:-} --network=$NETWORK_NAME --rollup.load-protocol-versions=true --rollup.halt=major"
+export EXTENDED_ARG="${EXTENDED_ARG:-} --network=$NETWORK_NAME"
 
 # Override Holocene
 if [ ! -z "$OVERRIDE_HOLOCENE" ]; then
@@ -26,7 +26,7 @@ unset OP_NODE__RPC_ENDPOINT OP_NODE__L1_BEACON OP_NODE__RPC_TYPE
 # Start op-node.
 exec op-node \
   --l1="$L1_RPC_ENDPOINT" \
-  --l2=http://op-geth:8551 \
+  --l2=http://op-reth:8551 \
   --rpc.addr=0.0.0.0 \
   --rpc.port=9545 \
   --l2.jwt-secret=/shared/jwt.txt \
