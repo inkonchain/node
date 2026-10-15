@@ -2,41 +2,40 @@
 
 > Forked and customized from https://github.com/smartcontracts/simple-optimism-node
 
-A Docker Compose setup for running an Ink node on the repository's current
-`op-geth`-based stack, plus the supporting healthcheck and monitoring services.
+A Docker Compose setup for running an Ink node, plus the supporting
+healthcheck and monitoring services.
 
-## Current Status
+## Versions
 
-This repository currently ships an `op-geth` execution client. The instructions
-below are the current `op-geth` runbook for this Compose stack, not the
-long-term recommendation.
+| Component | Version |
+|---|---|
+| Execution client | `op-reth` `v2.6.0` |
+| `op-node` | `v1.19.8` |
 
-Per Optimism, `op-geth` support ends on May 31, 2026, and nodes still running
-it at the L1 Glamsterdam hardfork will not be able to follow the canonical
-chain. `op-node` is not being deprecated. See the
+`op-geth` reached end of support on **May 31, 2026**, and the **Karst**
+hardfork activated on Ink Mainnet on **July 8, 2026** without `op-geth` support.
+This stack runs `op-reth` as its execution client. Post-Karst `op-reth` needs
+`op-node` `v1.19.1` or later because of the new `getPayloadV5` engine API
+method, and `op-reth` `v2.3.3` or later (`v2.3.2` shipped a known
+`eth_estimateGas` bug after Karst activation).
+
+See the
 [op-geth deprecation notice](https://docs.optimism.io/notices/op-geth-deprecation)
 and the
 [op-reth configuration guide](https://docs.optimism.io/node-operators/guides/configuration/execution-clients#op-reth-configuration).
 
-If you operate a production or long-lived node, start planning an `op-reth`
-migration now. Run it in parallel, validate it over a meaningful window, and
-prepare a fresh snapshot before the hardfork window. Treat this as an
-operator-owned migration rather than something to delay until a later
-sequencer-side client switch.
+### Migrating from the `op-geth` stack
 
-This repository does not yet ship an `op-reth` Compose path. Before it can, the
-repo still needs:
-
-- a validated `op-reth` service, image, and entrypoint in `docker-compose.yml`
-- an `op-node` engine endpoint that no longer points at `http://op-geth:8551`
-- archive init and snapshot handling that can consume `op-reth` snapshots where
-  available. The checked Sepolia Ink Gelato index already exposes
-  `reth/full/datadir` artifacts, but this repo does not use them yet and the
-  checked mainnet Ink index still only exposes geth archives
-- healthcheck and monitoring updates, which still target `op-geth` and the
-  `opgeth` InfluxDB database
-- env and port naming that no longer assumes `op-geth`, such as
-  `PORT__OP_GETH_*` and `envs/*/op-geth.env`
+- `op-geth` data cannot be reused. `op-reth` starts from an `op-reth` snapshot
+  (see [Snapshot sources](#snapshot-sources)), so run `docker compose down -v`
+  once, or remove the old `op_geth` volume, to reclaim the disk
+- Port variables were renamed from `PORT__OP_GETH_*` to `PORT__OP_RETH_*`, and
+  `envs/<network>/op-geth.env` is now `envs/<network>/op-reth.env`. Update any
+  existing `.env`
+- InfluxDB and its `opgeth` database are gone. The dashboard reads `op-reth`
+  metrics from Prometheus instead
+- `op-node` flags `--rollup.halt` and `--rollup.load-protocol-versions` were
+  removed upstream and are no longer passed
 
 ## Recommended Hardware
 
@@ -57,7 +56,11 @@ repo still needs:
 - Docker Engine and Docker Compose v2 on Linux, or Docker Desktop on macOS and
   Windows
 - Working L1 execution RPC and L1 beacon API endpoints for the Ethereum network
-  that matches your target Ink network
+  that matches your target Ink network. After the snapshot restore, `op-node`
+  derives the chain from L1 starting at the snapshot date, so the L1 RPC must
+  serve receipts for blocks up to about a week old and have high rate limits.
+  Free public endpoints are not enough (see
+  [`op-node` cannot connect to L1](#op-node-cannot-connect-to-l1))
 - Enough free disk for your chosen node type
 
 On Apple Silicon, the `healthcheck` sidecar runs as `linux/amd64`. Docker
@@ -107,8 +110,7 @@ cp .env.example .env
 
 ### 3. Edit `.env`
 
-For the lowest-friction first run on the current `op-geth` stack, start with
-`ink-sepolia` and a `full` node:
+For the lowest-friction first run, start with `ink-sepolia` and a `full` node:
 
 ```sh
 NETWORK_NAME=ink-sepolia
@@ -122,16 +124,14 @@ HEALTHCHECK__REFERENCE_RPC_PROVIDER=https://rpc-gel-sepolia.inkonchain.com
 Configuration notes:
 
 - `NETWORK_NAME`: `ink-sepolia` or `ink-mainnet`
-- `NODE_TYPE=full`: starts from an empty local datadir. This is the validated
-  first-run path in this repo
-- `NODE_TYPE=archive`: resolves the newest archival geth datadir for the
-  current `op-geth` stack from the Gelato ChainSnap index for your network,
-  downloads the matching `.sha256`, verifies the archive, and extracts it
-  during `bedrock-init`
+- `NODE_TYPE=full`: restores the latest `op-reth` full snapshot and runs
+  `op-reth --full`, which prunes old state
+- `NODE_TYPE=archive`: restores the latest `op-reth` archive snapshot and keeps
+  all history. See [Snapshot sources](#snapshot-sources) for download sizes
 - `OP_NODE__RPC_TYPE=basic`: the right default for generic providers; use
   `alchemy`, `quicknode`, or `erigon` only when your provider requires it
 - `.env` overrides the same variable for services that load `.env` in
-  `docker-compose.yml`, including `op-geth`, `op-node`, `healthcheck`, and
+  `docker-compose.yml`, including `op-reth`, `op-node`, `healthcheck`, and
   `bedrock-init`
 - `envs/<network>/op-node.env` already supplies the network P2P defaults, so
   most first-time setups only need the `.env` values above
@@ -140,9 +140,9 @@ Configuration notes:
 - For `ink-mainnet`, switch the healthcheck reference RPC to
   `https://rpc-gel.inkonchain.com`
 - Advanced wrapper inputs such as `OVERRIDE_HOLOCENE` and `EXTENDED_ARG` live
-  in `.env.example`. The shell entrypoints append them to both `op-geth` and
-  `op-node`, so leave them empty unless you know the flag is compatible with
-  the process you want to change
+  in `.env.example`. `EXTENDED_ARG` is appended to both `op-reth` and `op-node`,
+  and `OVERRIDE_HOLOCENE` to `op-node` only, so leave them empty unless you
+  know the flag is compatible with the process you want to change
 
 ### 4. Start the stack
 
@@ -150,20 +150,19 @@ Configuration notes:
 docker compose up -d --build
 ```
 
-This pulls the service images, builds the local `bedrock-init` image, creates a
-JWT, and starts:
+This pulls the service images, builds the local `bedrock-init` image, downloads
+and extracts the latest `op-reth` snapshot, creates a JWT, and starts:
 
 - `bedrock-init` (one-time init)
-- `op-geth` (current execution client in this repo)
+- `op-reth` (execution client)
 - `op-node`
 - `healthcheck`
 - `prometheus`
 - `grafana`
-- `influxdb`
 
-`op-geth` and `op-node` both wait for `bedrock-init` to create
-`/shared/initialized.txt`. If the stack looks stuck, check `bedrock-init`
-first.
+`op-reth` and `op-node` both wait for `bedrock-init` to create
+`/shared/initialized.txt`. The snapshot is hundreds of GB, so the first start can
+take a long time. If the stack looks stuck, check `bedrock-init` first.
 
 ## Validate Startup
 
@@ -181,19 +180,19 @@ once it exits. If you want to confirm it finished successfully, run
 ### Check the key logs
 
 ```sh
-docker compose logs --tail 50 bedrock-init op-geth op-node
+docker compose logs --tail 50 bedrock-init op-reth op-node
 ```
 
 Good startup signals:
 
 - `bedrock-init` on first boot: `Creating JWT...` and `Creating Bedrock flag...`
 - `bedrock-init` on restart with existing volumes: `Bedrock node already initialized`
-- `op-geth`: `HTTP server started`
+- `op-reth`: `RPC HTTP server started`
 - `op-node`: `Rollup node started`
 
 ### Smoke test the RPC endpoints
 
-Execution RPC for the current `op-geth` service:
+Execution RPC for the `op-reth` service:
 
 ```sh
 curl -fsS -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' http://127.0.0.1:9993
@@ -214,9 +213,10 @@ Sync status:
 curl -fsS -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"optimism_syncStatus","params":[],"id":1}' http://127.0.0.1:9545
 ```
 
-On a brand-new `full` node, this is the best early signal that the rollup node
-is moving forward. Look for `current_l1` and `head_l1` values to advance even
-while local L2 block height is still `0x0`.
+This is the best early signal that the rollup node is moving forward. Look for
+`current_l1` to advance toward `head_l1`. Right after a snapshot restore,
+`unsafe_l2` and `eth_blockNumber` stay at the snapshot height until derivation
+produces new blocks.
 
 Healthcheck metrics:
 
@@ -224,10 +224,9 @@ Healthcheck metrics:
 curl -fsS http://127.0.0.1:7300/metrics | grep -E 'healthcheck_(reference_height|target_height|height_difference)'
 ```
 
-On a brand-new `full` node, `eth_blockNumber` can stay at `0x0` for a while.
-That is expected. During that window it is also normal for
-`healthcheck_target_height` to stay at `0`. Use `optimism_syncStatus` and the
-healthcheck metrics to confirm the node is moving forward during early sync.
+After restoring a snapshot, `eth_blockNumber` starts at the snapshot height and
+catches up to the chain head. Use `optimism_syncStatus` and the healthcheck
+metrics to confirm the node is moving forward during catch-up.
 
 ### Open Grafana
 
@@ -299,10 +298,10 @@ run:
 ./progress.sh
 ```
 
-On a brand-new `full` node, `./progress.sh` can return `Error: Not syncing`
-while `eth_blockNumber` is still `0x0`. In that phase, use
+Right after startup, `./progress.sh` can return `Error: Not syncing` until the
+execution client starts importing blocks. In that phase, use
 `optimism_syncStatus` and the healthcheck metrics from the validation section,
-then retry the script after the local block height starts moving.
+then retry the script.
 
 If you do not want to install `cast`, use the RPC and metrics checks above
 instead.
@@ -313,10 +312,11 @@ The `op-node` bootstrap and static peers for each network are already set in
 `envs/<network>/op-node.env`, so a clean checkout needs no manual peering setup.
 
 The values below are execution-layer peers and are **not** used by the current
-stack: `op-geth` runs with `--maxpeers=0 --nodiscover`, because `op-node` runs
-`--syncmode=consensus-layer` and payloads arrive over the Engine API. They are
-recorded here as the reference for the `op-reth` migration described in
-[Current Status](#current-status).
+stack: `op-reth` runs with no peers and discovery disabled, because `op-node`
+runs `--syncmode=consensus-layer` and payloads arrive over the Engine API. They
+are recorded here as a reference if you want to enable `op-reth` P2P (remove
+`--max-outbound-peers=0 --max-inbound-peers=0` and the `--disable-*-discovery`
+flags in `scripts/start-op-reth.sh`).
 
 `op-reth` `--bootnodes`, both networks:
 
@@ -344,11 +344,6 @@ enode://c2dd4ad2f3f5dd2e3d6c77acbb4f96a73d692f3172181caf457863bd9ac0645c4b709b98
 
 ## Troubleshooting
 
-### `bedrock-init` exits quickly on a full node
-
-That is expected. `full` nodes do not download a snapshot. If you want a
-snapshot restore path, switch to `NODE_TYPE=archive`.
-
 ### `bedrock-init` says `Bedrock node already initialized`
 
 That means the stack is reusing existing Docker volumes. This is expected on
@@ -358,9 +353,10 @@ restarts. If you intentionally want a clean first-boot flow, wipe the volumes:
 docker compose down -v
 ```
 
-### `bedrock-init` takes a long time on an archive node
+### `bedrock-init` takes a long time
 
-That is expected while the snapshot is downloading and extracting. Check:
+That is expected while the snapshot is downloading and extracting. Snapshots are
+roughly 250-400 GB. Check:
 
 ```sh
 docker compose logs -f bedrock-init
@@ -370,36 +366,51 @@ If image pulls or snapshot downloads fail, make sure the host can reach:
 
 - `docker.io`
 - `us-docker.pkg.dev`
-- `ink.t.snapshots.gelato.cloud`
-- `ink.snapshots.gelato.cloud`
-
-Archive geth snapshots for the current stack are resolved from these indexes:
-
-- Sepolia: [https://ink.t.snapshots.gelato.cloud/index.html](https://ink.t.snapshots.gelato.cloud/index.html)
-- Mainnet: [https://ink.snapshots.gelato.cloud/index.html](https://ink.snapshots.gelato.cloud/index.html)
-
-`bedrock-init` downloads the matching `.sha256` file and verifies the archive
-before extraction. This is still a geth datadir path, not an `op-reth`
-bootstrap flow.
-
-At the time of this docs refresh, the Sepolia Ink Gelato index also exposes
-`reth/full/datadir` artifacts, but the checked mainnet Ink index does not yet
-show `reth` artifacts. This repository does not consume those `reth` snapshots
-yet.
-
-If `bedrock-init` exits with `Failed to resolve latest snapshot` or
-`Unexpected snapshot filename format`, the index is unreachable or its format
-changed. Switch back to `NODE_TYPE=full` and retry, or pick a direct archive
-from the index page and update the script before retrying.
+- `snapshots.optimism.io`
+- `*.r2.cloudflarestorage.com` (snapshot downloads redirect here)
 
 If `bedrock-init` exits with `Unexpected checksum file format`,
 `Checksum file does not match downloaded archive`, or `SHA256 verification
-failed`, do not reuse that download. Retry later or verify the checksum file
-from the index page before attempting another restore.
+failed`, do not reuse that download. Retry later or verify the checksum
+yourself before attempting another restore.
 
-### `eth_blockNumber` stays at `0x0` right after startup
+### Snapshot sources
 
-That is normal for a fresh `full` node. Check the rollup node instead:
+Ink snapshots are published by Optimism at
+[https://snapshots.optimism.io/](https://snapshots.optimism.io/). The former
+Gelato ChainSnap indexes (`ink.snapshots.gelato.cloud` and
+`ink.t.snapshots.gelato.cloud`) are retired.
+
+The service lists `op-reth` `full` and `archive` snapshots for both Ink
+Mainnet (`ink-mainnet-0`) and Ink Sepolia (`ink-sepolia-0`). `bedrock-init`
+downloads the latest snapshot matching `NODE_TYPE` from a stable "latest"
+download pair:
+
+```
+https://snapshots.optimism.io/api/snapshots/<network>/latest/<full|archive>/archive
+https://snapshots.optimism.io/api/snapshots/<network>/latest/<full|archive>/checksum
+```
+
+For example, the latest Ink Sepolia full snapshot:
+
+```sh
+curl -LOJ https://snapshots.optimism.io/api/snapshots/ink-sepolia-0/latest/full/checksum
+curl -LOJ https://snapshots.optimism.io/api/snapshots/ink-sepolia-0/latest/full/archive
+sha256sum -c ink-sepolia-0-op-reth-full-*.tar.zst.sha256sum
+```
+
+Both endpoints redirect to a presigned Cloudflare R2 URL, so follow redirects.
+Archives are `.tar.zst`, and the checksum file names the dated archive it
+covers, so `-OJ` keeps the two filenames in sync.
+
+These are `op-reth` datadirs, so `bedrock-init` extracts them straight into
+the `op_reth` volume. To be safe, do not mix `NODE_TYPE` values on one volume: wipe the
+volumes before switching between `full` and `archive`.
+
+### `eth_blockNumber` looks stuck right after startup
+
+`op-reth` only advances once `op-node` is connected to L1 and sending payloads
+over the Engine API. Check the rollup node:
 
 ```sh
 curl -fsS -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"optimism_syncStatus","params":[],"id":1}' http://127.0.0.1:9545
@@ -407,10 +418,28 @@ curl -fsS -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","
 
 ### `./progress.sh` says `Error: Not syncing`
 
-That is expected during the earliest part of a fresh `full` node bootstrap. The
-script samples `eth_blockNumber` twice over 10 seconds, so it cannot estimate
-sync speed until the local execution client starts importing blocks. Use
-`optimism_syncStatus` and the healthcheck metrics first, then retry later.
+That is expected until the execution client starts importing blocks. The script
+samples `eth_blockNumber` twice over 10 seconds, so it cannot estimate sync
+speed before then. Use `optimism_syncStatus` and the healthcheck metrics first,
+then retry later.
+
+### `op-node` logs L1 receipt errors, or `current_l1` is stuck
+
+After a snapshot restore, `op-node` fetches L1 receipts starting at the snapshot
+date. Typical symptoms with an under-provisioned L1 RPC:
+
+- `receipt 0 has unexpected nil block number`: the provider does not serve
+  receipts for older blocks (seen with PublicNode on Ink Sepolia)
+- `429 Too Many Requests`: the provider is rate limiting (seen with Tenderly's
+  public gateway)
+- `Batch of more than 3 requests are not allowed`: the provider limits batch
+  size. Set `OP_NODE_L1_RPC_MAX_BATCH_SIZE=3` in `.env`. With dRPC's free plan
+  this unblocked derivation, but it still advanced only about 0.13 L1 blocks per
+  second against L1's 0.083 blocks per second of chain growth, so a multi-day
+  gap takes days to close
+
+Use a provider with receipt history and higher limits for the L1 execution RPC.
+Progress is visible as `current_l1` rising in `optimism_syncStatus`.
 
 ### `op-node` cannot connect to L1
 

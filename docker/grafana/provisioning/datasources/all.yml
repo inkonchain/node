@@ -3,6 +3,7 @@ apiVersion: 1
 deleteDatasources:
   - name: "Prometheus"
   - name: "InfluxDB"
+  - name: "InfluxDB (op-geth)"
 
 datasources:
   - access: "proxy"
@@ -13,14 +14,4 @@ datasources:
     org_id: 1
     type: "prometheus"
     url: "http://prometheus:9090"
-    version: 1
-  - access: "proxy"
-    editable: true
-    is_default: false
-    name: "InfluxDB (op-geth)"
-    uid: "4knV40nVb"
-    org_id: 1
-    type: "influxdb"
-    database: "opgeth"
-    url: "http://influxdb:8086"
     version: 1

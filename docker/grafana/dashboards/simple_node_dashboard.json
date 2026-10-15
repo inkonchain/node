@@ -42,8 +42,8 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "4knV40nVb"
+        "type": "prometheus",
+        "uid": "6R74VAnVz"
       },
       "description": "",
       "fieldConfig": {
@@ -123,112 +123,22 @@
       "pluginVersion": "7.5.5",
       "targets": [
         {
-          "alias": "Unsafe Head",
           "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
+            "type": "prometheus",
+            "uid": "6R74VAnVz"
           },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "geth.chain/head/block.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "expr": "healthcheck_target_height",
+          "legendFormat": "head",
+          "refId": "A"
         },
         {
-          "alias": "Safe Head",
           "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
+            "type": "prometheus",
+            "uid": "6R74VAnVz"
           },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "geth.chain/head/safe.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "Finalized Head",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
-          },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "geth.chain/head/finalized.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "expr": "reth_blockchain_tree_safe_block_height",
+          "legendFormat": "safe",
+          "refId": "B"
         }
       ],
       "title": "Node Block Height",
@@ -392,7 +302,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -486,7 +398,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -523,13 +437,13 @@
       },
       "id": 26,
       "panels": [],
-      "title": "Geth Performance",
+      "title": "Execution Client Performance",
       "type": "row"
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "4knV40nVb"
+        "type": "prometheus",
+        "uid": "6R74VAnVz"
       },
       "fieldConfig": {
         "defaults": {
@@ -581,7 +495,7 @@
               }
             ]
           },
-          "unit": "%"
+          "unit": "percentunit"
         },
         "overrides": []
       },
@@ -608,111 +522,13 @@
       "pluginVersion": "7.5.5",
       "targets": [
         {
-          "alias": "system",
           "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
+            "type": "prometheus",
+            "uid": "6R74VAnVz"
           },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "measurement": "geth.system/cpu/sysload.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "geth",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
-          },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "geth.system/cpu/procload.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "IO",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
-          },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "geth.system/cpu/syswait.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "expr": "rate(reth_process_cpu_seconds_total[1m])",
+          "legendFormat": "process",
+          "refId": "A"
         }
       ],
       "title": "CPU",
@@ -720,8 +536,8 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "4knV40nVb"
+        "type": "prometheus",
+        "uid": "6R74VAnVz"
       },
       "fieldConfig": {
         "defaults": {
@@ -800,75 +616,22 @@
       "pluginVersion": "7.5.5",
       "targets": [
         {
-          "alias": "used",
           "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
+            "type": "prometheus",
+            "uid": "6R74VAnVz"
           },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "measurement": "geth.system/memory/used.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "expr": "reth_jemalloc_resident",
+          "legendFormat": "resident",
+          "refId": "A"
         },
         {
-          "alias": "held",
           "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
+            "type": "prometheus",
+            "uid": "6R74VAnVz"
           },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "geth.system/memory/held.gauge",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["value"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "expr": "reth_jemalloc_allocated",
+          "legendFormat": "allocated",
+          "refId": "B"
         }
       ],
       "title": "Memory",
@@ -876,8 +639,8 @@
     },
     {
       "datasource": {
-        "type": "influxdb",
-        "uid": "4knV40nVb"
+        "type": "prometheus",
+        "uid": "6R74VAnVz"
       },
       "fieldConfig": {
         "defaults": {
@@ -956,77 +719,22 @@
       "pluginVersion": "7.5.5",
       "targets": [
         {
-          "alias": "read",
           "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
+            "type": "prometheus",
+            "uid": "6R74VAnVz"
           },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "measurement": "geth.system/disk/readdata.meter",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["m1"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "expr": "rate(reth_io_read_bytes[1m])",
+          "legendFormat": "read",
+          "refId": "A"
         },
         {
-          "alias": "write",
           "datasource": {
-            "type": "influxdb",
-            "uid": "4knV40nVb"
+            "type": "prometheus",
+            "uid": "6R74VAnVz"
           },
-          "groupBy": [
-            {
-              "params": ["$__interval"],
-              "type": "time"
-            },
-            {
-              "params": ["null"],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "geth.system/disk/writedata.meter",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"m1\") FROM \"geth.system/disk/writedata.meter\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": ["m1"],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
+          "expr": "rate(reth_io_write_bytes[1m])",
+          "legendFormat": "write",
+          "refId": "B"
         }
       ],
       "title": "Disk",
@@ -1048,6 +756,6 @@
   "timezone": "",
   "title": "Simple Node Dashboard",
   "uid": "fNH7uZ97k",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }
