@@ -59,25 +59,28 @@ echo "Blocks per minute: $PER_MIN"
 # Get L2 head block with error handling
 HEAD=$(cast block-number --rpc-url "$L2_URL" 2>/dev/null) || error_exit "Failed to get L2 block number"
 BEHIND=$((HEAD - T1))
-[ $BEHIND -lt 0 ] && error_exit "L2 is ahead of local node"
+if [ $BEHIND -lt 0 ]; then
+    error_exit "Local node is ahead of remote L2 RPC endpoint (local: $T1, remote: $HEAD)"
+fi
+
+if [ $BEHIND -eq 0 ]; then
+    echo "Local node is fully synced with L2 head (block $HEAD)."
+    exit 0
+fi
 
 # Calculate time estimates
 echo "Calculating time estimates..."
 MINUTES=$((BEHIND / PER_MIN))
 HOURS=$((MINUTES / 60))
 
-if [ $MINUTES -le 60 ] ; then
-   echo "Sync will complete in minutes"
-   echo "Minutes until sync completed: $MINUTES"
-fi
-
-if [ $MINUTES -gt 60 ] ; then
-   echo "Sync will take hours"
-   echo "Hours until sync completed: $HOURS"
-fi
-
-if [ $HOURS -gt 24 ] ; then
-   echo "Sync will take days"
-   DAYS=$((HOURS / 24))
-   echo "Days until sync complete: $DAYS"
+if [ $HOURS -ge 24 ]; then
+    DAYS=$((HOURS / 24))
+    echo "Sync will take days"
+    echo "Days until sync complete: $DAYS (approx $HOURS hours)"
+elif [ $MINUTES -ge 60 ]; then
+    echo "Sync will take hours"
+    echo "Hours until sync completed: $HOURS (approx $MINUTES minutes)"
+else
+    echo "Sync will complete in minutes"
+    echo "Minutes until sync completed: $MINUTES"
 fi
