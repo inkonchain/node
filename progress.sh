@@ -66,18 +66,15 @@ echo "Calculating time estimates..."
 MINUTES=$((BEHIND / PER_MIN))
 HOURS=$((MINUTES / 60))
 
-if [ $MINUTES -le 60 ] ; then
+if [ $MINUTES -le 60 ]; then
    echo "Sync will complete in minutes"
    echo "Minutes until sync completed: $MINUTES"
-fi
-
-if [ $MINUTES -gt 60 ] ; then
+elif [ $HOURS -le 24 ]; then
    echo "Sync will take hours"
    echo "Hours until sync completed: $HOURS"
-fi
-
-if [ $HOURS -gt 24 ] ; then
+else
    echo "Sync will take days"
    DAYS=$((HOURS / 24))
    echo "Days until sync complete: $DAYS"
 fi
+
