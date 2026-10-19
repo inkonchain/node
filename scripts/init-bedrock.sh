@@ -71,9 +71,13 @@ extractzst "$SNAPSHOT_PATH" "$RETH_DATA_DIR"
 rm "$SNAPSHOT_PATH"
 rm "$SNAPSHOT_CHECKSUM_PATH"
 
-echo "Creating JWT..."
 mkdir -p "$(dirname "$BEDROCK_JWT_PATH")"
-openssl rand -hex 32 > "$BEDROCK_JWT_PATH"
+if [ -s "$BEDROCK_JWT_PATH" ]; then
+  echo "JWT secret already exists at $BEDROCK_JWT_PATH, keeping existing file."
+else
+  echo "Creating JWT..."
+  openssl rand -hex 32 > "$BEDROCK_JWT_PATH"
+fi
 
 echo "Creating Bedrock flag..."
 touch "$INITIALIZED_FLAG"

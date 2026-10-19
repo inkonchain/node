@@ -49,20 +49,24 @@ echo "Getting final block number..."
 T1=$(cast block-number --rpc-url "$ETH_RPC_URL" 2>/dev/null) || error_exit "Failed to get final block number"
 echo "Final block: $T1"
 
+# Get L2 head block with error handling
+HEAD=$(cast block-number --rpc-url "$L2_URL" 2>/dev/null) || error_exit "Failed to get L2 block number"
+BEHIND=$((HEAD - T1))
+
+if [ "$BEHIND" -le 0 ]; then
+    echo "Local node is fully synced with L2 (current block: $T1, remote head: $HEAD)."
+    exit 0
+fi
+
 # Calculate blocks per minute
 PER_MIN=$(($T1 - $T0))
 PER_MIN=$(($PER_MIN * 6))
 echo "Blocks per minute: $PER_MIN"
 
-[ $PER_MIN -eq 0 ] && error_exit "Not syncing"
-
-# Get L2 head block with error handling
-HEAD=$(cast block-number --rpc-url "$L2_URL" 2>/dev/null) || error_exit "Failed to get L2 block number"
-BEHIND=$((HEAD - T1))
-[ $BEHIND -lt 0 ] && error_exit "L2 is ahead of local node"
+[ "$PER_MIN" -le 0 ] && error_exit "Not syncing (0 blocks synced in 10s, $BEHIND blocks behind)"
 
 # Calculate time estimates
-echo "Calculating time estimates..."
+echo "Calculating time estimates ($BEHIND blocks behind)..."
 MINUTES=$((BEHIND / PER_MIN))
 HOURS=$((MINUTES / 60))
 
