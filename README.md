@@ -371,8 +371,10 @@ If image pulls or snapshot downloads fail, make sure the host can reach:
 
 If `bedrock-init` exits with `Unexpected checksum file format`,
 `Checksum file does not match downloaded archive`, or `SHA256 verification
-failed`, do not reuse that download. Retry later or verify the checksum
-yourself before attempting another restore.
+failed`, retry later: the next run downloads the snapshot again and replaces
+the failed archive. Archives named like `snapshot.tar.1.zst`, left by runs
+before this behaviour, stay in the `snapshot_downloads` volume until you remove
+them (for example with `docker compose down -v`).
 
 ### Snapshot sources
 
