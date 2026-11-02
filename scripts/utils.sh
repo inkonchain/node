@@ -31,13 +31,21 @@ function extractlz4() {
 # Arguments:
 #   url: URL of the file to download.
 #   out: Location to download the file to.
+#
+# A file left at `out` by an earlier failed run (for example after a checksum
+# mismatch or an interrupted extraction) must be replaced, not kept: by default
+# aria2c saves the new download as "<name>.1.<ext>" and the caller would go on
+# to verify and extract the stale file. An unfinished download that still has
+# its .aria2 control file is resumed as before.
 function download() {
   local out_dir out_name
   out_dir="$(dirname "$2")"
   out_name="$(basename "$2")"
 
   mkdir -p "$out_dir"
-  aria2c --max-tries=0 -x 16 -s 16 -k100M --dir="$out_dir" --out="$out_name" "$1"
+  aria2c --max-tries=0 -x 16 -s 16 -k100M \
+    --allow-overwrite=true --auto-file-renaming=false \
+    --dir="$out_dir" --out="$out_name" "$1"
 }
 
 # verify_sha256_checksum: Verifies a downloaded file against a checksum file.
