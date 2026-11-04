@@ -1,5 +1,5 @@
 - name: 'default'
-  org_id: 1
+  orgId: 1
   folder: ''
   type: 'file'
   options:
