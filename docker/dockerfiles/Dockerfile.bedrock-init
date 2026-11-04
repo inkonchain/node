@@ -5,12 +5,3 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 # Install required packages.
 RUN apt-get update && apt install -y curl wget git rsync build-essential openssl python3 python3-pip aria2 zstd lz4
-
-# Install Go.
-RUN curl -sSL https://golang.org/dl/go1.21.6.linux-amd64.tar.gz | tar -v -C /usr/local -xz
-RUN cp /usr/local/go/bin/go /usr/bin/go
-
-# Install Foundry.
-RUN curl -L https://foundry.paradigm.xyz | bash
-RUN /root/.foundry/bin/foundryup
-RUN rsync -a /root/.foundry/bin/ /usr/bin/
