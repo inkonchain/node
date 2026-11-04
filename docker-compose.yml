@@ -74,7 +74,7 @@ services:
       - ${PORT__PROMETHEUS:-9090}:9090
 
   grafana:
-    image: grafana/grafana:${IMAGE_TAG__GRAFANA:-9.3.0}
+    image: grafana/grafana:${IMAGE_TAG__GRAFANA:-12.4.14}
     restart: unless-stopped
     env_file:
       - ./envs/common/grafana.env
