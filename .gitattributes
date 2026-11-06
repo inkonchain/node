@@ -1,0 +1,4 @@
+# Shell scripts must use LF line endings so they execute on Linux regardless
+# of the contributor's core.autocrlf setting (Windows checkouts otherwise
+# produce CRLF and fail with "bad interpreter" errors).
+*.sh text eol=lf
