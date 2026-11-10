@@ -152,111 +152,6 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "graph": false,
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 8,
-        "x": 0,
-        "y": 15
-      },
-      "id": 10,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "6R74VAnVz"
-          },
-          "editorMode": "code",
-          "expr": "fault_detector_highest_checked_batch_index{}",
-          "legendFormat": "Checked",
-          "range": true,
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "6R74VAnVz"
-          },
-          "editorMode": "code",
-          "expr": "fault_detector_highest_known_batch_index{}",
-          "hide": false,
-          "legendFormat": "Known",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "Fault Check Status",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "6R74VAnVz"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
             "mode": "thresholds"
           },
           "mappings": [
@@ -294,8 +189,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 0,
         "y": 15
       },
       "id": 12,
@@ -314,20 +209,6 @@
       },
       "pluginVersion": "9.3.0",
       "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "6R74VAnVz"
-          },
-          "editorMode": "code",
-          "exemplar": true,
-          "expr": "fault_detector_is_currently_mismatched{}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Fault Detection",
-          "range": true,
-          "refId": "B"
-        },
         {
           "datasource": {
             "type": "prometheus",
@@ -387,8 +268,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 8,
-        "x": 16,
+        "w": 12,
+        "x": 12,
         "y": 15
       },
       "id": 24,
