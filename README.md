@@ -285,14 +285,9 @@ This removes all local chain and monitoring data.
 
 ### Estimate remaining sync time
 
-`progress.sh` uses Foundry's `cast` on the host machine.
-
-The `bedrock-init` container installs Foundry for its own image build, but that
-does not make `cast` available on your host shell. Install Foundry locally if
-you want to use `progress.sh`.
-
-Install Foundry from [https://getfoundry.sh/](https://getfoundry.sh/) and then
-run:
+`progress.sh` uses Foundry's `cast`, which must be installed on your host
+machine. Install Foundry from [https://getfoundry.sh/](https://getfoundry.sh/)
+and then run:
 
 ```sh
 ./progress.sh
