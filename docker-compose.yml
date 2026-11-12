@@ -1,6 +1,6 @@
 services:
   healthcheck:
-    image: ethereumoptimism/replica-healthcheck:${IMAGE_TAG__HEALTHCHECK:-latest}
+    image: ethereumoptimism/replica-healthcheck:${IMAGE_TAG__HEALTHCHECK:-1.2.6}
     platform: linux/amd64
     restart: unless-stopped
     env_file:
@@ -63,7 +63,7 @@ services:
       - snapshot_downloads:/downloads
 
   prometheus:
-    image: prom/prometheus:${IMAGE_TAG__PROMETHEUS:-latest}
+    image: prom/prometheus:${IMAGE_TAG__PROMETHEUS:-v3.16.0}
     restart: unless-stopped
     env_file:
       - .env
